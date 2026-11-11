@@ -1,0 +1,7 @@
+# build
+out/
+bin/
+Rubrica.jar
+
+# dati locali della rubrica
+informazioni.txt
