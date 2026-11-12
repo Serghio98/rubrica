@@ -1,29 +1,25 @@
 package rubrica.ui;
 
 import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.sql.SQLException;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
-import javax.swing.UIManager;
 import javax.swing.text.AbstractDocument;
 
 import rubrica.dominio.Persona;
-import rubrica.persistenza.GestoreFile;
 
 /**
  * Finestra "editor-persona": modulo per inserire o modificare i dati di una persona.
@@ -31,31 +27,41 @@ import rubrica.persistenza.GestoreFile;
  */
 public class EditorPersona extends JDialog {
 
+    /** Salva i dati validati, ad esempio nel database. */
+    public interface Salvataggio {
+        void salva(Persona dati) throws SQLException;
+    }
+
+    private final Salvataggio salvataggio;
+
     private final JTextField campoNome = new JTextField(22);
     private final JTextField campoCognome = new JTextField(22);
     private final JTextField campoIndirizzo = new JTextField(22);
     private final JTextField campoTelefono = new JTextField(22);
     private final JTextField campoEta = new JTextField(22);
 
-    /** I dati inseriti, oppure null finché l'utente non preme Salva. */
+    /** I dati salvati, oppure null finché il salvataggio non riesce. */
     private Persona risultato;
 
     /**
      * Apre l'editor sopra la finestra indicata e attende che venga chiuso.
+     * Con Salva i dati vengono controllati e passati a {@code salvataggio}: se il
+     * salvataggio non riesce l'errore viene mostrato e l'editor resta aperto.
      *
      * @param persona la persona da modificare, oppure null per inserirne una nuova
-     * @return i dati inseriti se l'utente ha premuto Salva, null se ha annullato
+     * @return i dati salvati, oppure null se l'utente ha annullato
      */
-    public static Persona apri(Window proprietario, Persona persona) {
-        EditorPersona editor = new EditorPersona(proprietario, persona);
+    public static Persona apri(Window proprietario, Persona persona, Salvataggio salvataggio) {
+        EditorPersona editor = new EditorPersona(proprietario, persona, salvataggio);
         editor.setVisible(true);
         return editor.risultato;
     }
 
-    private EditorPersona(Window proprietario, Persona persona) {
+    private EditorPersona(Window proprietario, Persona persona, Salvataggio salvataggio) {
         super(proprietario,
                 persona == null ? "Editor persona - Nuova persona" : "Editor persona - Modifica",
                 ModalityType.APPLICATION_MODAL);
+        this.salvataggio = salvataggio;
 
         if (persona != null) {
             campoNome.setText(persona.getNome());
@@ -65,7 +71,7 @@ public class EditorPersona extends JDialog {
             campoEta.setText(persona.isEtaIndicata() ? String.valueOf(persona.getEta()) : "");
         }
         // Il filtro va messo dopo aver riempito i campi, così un telefono non valido
-        // letto dal file resta visibile (e va corretto) invece di sparire.
+        // già salvato resta visibile (e va corretto) invece di sparire.
         ((AbstractDocument) campoTelefono.getDocument()).setDocumentFilter(new FiltroTelefono());
         campoTelefono.setToolTipText("Cifre, spazi, ( ) - . / e un + iniziale, ad esempio +39 348 000 0000");
 
@@ -76,12 +82,12 @@ public class EditorPersona extends JDialog {
 
         JPanel modulo = new JPanel(new GridBagLayout());
         modulo.setBorder(BorderFactory.createEmptyBorder(10, 12, 12, 12));
-        aggiungiRiga(modulo, 0, "Nome", campoNome);
-        aggiungiRiga(modulo, 1, "Cognome", campoCognome);
-        aggiungiRiga(modulo, 2, "Indirizzo", campoIndirizzo);
-        aggiungiRiga(modulo, 3, "Telefono", campoTelefono);
-        aggiungiRiga(modulo, 4, "Età", campoEta);
-        aggiungiNota(modulo, 5, "Obbligatori: telefono e almeno uno tra nome e cognome.");
+        Modulo.aggiungiRiga(modulo, 0, "Nome", campoNome);
+        Modulo.aggiungiRiga(modulo, 1, "Cognome", campoCognome);
+        Modulo.aggiungiRiga(modulo, 2, "Indirizzo", campoIndirizzo);
+        Modulo.aggiungiRiga(modulo, 3, "Telefono", campoTelefono);
+        Modulo.aggiungiRiga(modulo, 4, "Età", campoEta);
+        Modulo.aggiungiTesto(modulo, 5, "Obbligatori: telefono e almeno uno tra nome e cognome.", true);
 
         add(toolbar, BorderLayout.NORTH);
         add(modulo, BorderLayout.CENTER);
@@ -97,35 +103,6 @@ public class EditorPersona extends JDialog {
         setLocationRelativeTo(proprietario);
     }
 
-    private static void aggiungiRiga(JPanel modulo, int riga, String etichetta, JTextField campo) {
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridy = riga;
-        c.insets = new Insets(4, 4, 4, 4);
-        c.anchor = GridBagConstraints.LINE_START;
-
-        JLabel label = new JLabel(etichetta);
-        label.setLabelFor(campo);
-        c.gridx = 0;
-        modulo.add(label, c);
-
-        c.gridx = 1;
-        c.weightx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        modulo.add(campo, c);
-    }
-
-    private static void aggiungiNota(JPanel modulo, int riga, String testo) {
-        JLabel nota = new JLabel(testo);
-        nota.setForeground(UIManager.getColor("Label.disabledForeground"));
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridy = riga;
-        c.gridx = 0;
-        c.gridwidth = 2;
-        c.insets = new Insets(8, 4, 0, 4);
-        c.anchor = GridBagConstraints.LINE_START;
-        modulo.add(nota, c);
-    }
-
     private void collegaTasto(int tasto, String nome, Runnable azione) {
         JRootPane radice = getRootPane();
         radice.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(tasto, 0), nome);
@@ -137,7 +114,7 @@ public class EditorPersona extends JDialog {
         });
     }
 
-    /** Controlla i dati inseriti; se sono validi li memorizza e chiude la finestra. */
+    /** Controlla i dati inseriti; se sono validi li salva e chiude la finestra. */
     private void salva() {
         String nome = campoNome.getText().trim();
         String cognome = campoCognome.getText().trim();
@@ -149,9 +126,10 @@ public class EditorPersona extends JDialog {
             mostraErrore("Inserire almeno il nome o il cognome.", campoNome);
             return;
         }
-        if (!controllaSeparatore("Nome", campoNome)
-                || !controllaSeparatore("Cognome", campoCognome)
-                || !controllaSeparatore("Indirizzo", campoIndirizzo)) {
+        if (!controllaLunghezza("Nome", campoNome, nome, Persona.LUNGHEZZA_MASSIMA_NOME)
+                || !controllaLunghezza("Cognome", campoCognome, cognome, Persona.LUNGHEZZA_MASSIMA_COGNOME)
+                || !controllaLunghezza("Indirizzo", campoIndirizzo, indirizzo, Persona.LUNGHEZZA_MASSIMA_INDIRIZZO)
+                || !controllaLunghezza("Telefono", campoTelefono, telefono, Persona.LUNGHEZZA_MASSIMA_TELEFONO)) {
             return;
         }
         if (telefono.isEmpty()) {
@@ -177,15 +155,21 @@ public class EditorPersona extends JDialog {
             }
         }
 
-        risultato = new Persona(nome, cognome, indirizzo, telefono, eta);
+        Persona dati = new Persona(nome, cognome, indirizzo, telefono, eta);
+        try {
+            salvataggio.salva(dati);
+        } catch (SQLException e) {
+            Messaggi.erroreDatabase(this, e);
+            return;
+        }
+        risultato = dati;
         dispose();
     }
 
-    /** Il separatore del file non può comparire nei dati, altrimenti la riga salvata sarebbe illeggibile. */
-    private boolean controllaSeparatore(String etichetta, JTextField campo) {
-        if (campo.getText().contains(GestoreFile.SEPARATORE)) {
-            mostraErrore("Il carattere \"" + GestoreFile.SEPARATORE + "\" non è consentito nel campo "
-                    + etichetta + ".", campo);
+    /** I campi non possono superare la lunghezza delle colonne del database. */
+    private boolean controllaLunghezza(String etichetta, JTextField campo, String valore, int massimo) {
+        if (valore.length() > massimo) {
+            mostraErrore("Il campo " + etichetta + " può contenere al massimo " + massimo + " caratteri.", campo);
             return false;
         }
         return true;

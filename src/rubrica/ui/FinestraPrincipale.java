@@ -4,8 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
+import java.sql.SQLException;
 
+import javax.swing.Box;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -18,17 +19,23 @@ import rubrica.dominio.Persona;
 import rubrica.logica.Rubrica;
 
 /**
- * Finestra principale: tabella delle persone e toolbar con Nuovo, Modifica, Elimina.
+ * Finestra principale: tabella dei contatti dell'utente che ha fatto il login
+ * e toolbar con Nuovo, Modifica, Elimina e, a destra, Logout.
  */
 public class FinestraPrincipale extends JFrame {
 
     private final Rubrica rubrica;
+    private final Runnable dopoLogout;
     private final PersonaTableModel modello;
     private final JTable tabella;
 
-    public FinestraPrincipale(Rubrica rubrica) {
-        super("Rubrica");
+    /**
+     * @param dopoLogout eseguito dal bottone Logout, per tornare alla finestra di login
+     */
+    public FinestraPrincipale(Rubrica rubrica, Runnable dopoLogout) {
+        super("Rubrica - " + rubrica.getUtente().getUsername());
         this.rubrica = rubrica;
+        this.dopoLogout = dopoLogout;
         this.modello = new PersonaTableModel(rubrica);
         this.tabella = new JTable(modello);
 
@@ -52,6 +59,8 @@ public class FinestraPrincipale extends JFrame {
         toolbar.add(new BottoneToolbar("Nuovo", Icona.Tipo.NUOVO, KeyEvent.VK_N, e -> nuovo()));
         toolbar.add(new BottoneToolbar("Modifica", Icona.Tipo.MODIFICA, KeyEvent.VK_M, e -> modifica()));
         toolbar.add(new BottoneToolbar("Elimina", Icona.Tipo.ELIMINA, KeyEvent.VK_E, e -> elimina()));
+        toolbar.add(Box.createHorizontalGlue());
+        toolbar.add(new BottoneToolbar("Logout", Icona.Tipo.LOGOUT, KeyEvent.VK_L, e -> logout()));
 
         add(toolbar, BorderLayout.NORTH);
         add(new JScrollPane(tabella), BorderLayout.CENTER);
@@ -63,14 +72,8 @@ public class FinestraPrincipale extends JFrame {
     }
 
     private void nuovo() {
-        Persona nuova = EditorPersona.apri(this, null);
-        if (nuova == null) {
+        if (EditorPersona.apri(this, null, rubrica::aggiungi) == null) {
             return;
-        }
-        try {
-            rubrica.aggiungi(nuova);
-        } catch (IOException e) {
-            mostraErroreSalvataggio(e);
         }
         int riga = rubrica.getNumeroPersone() - 1;
         modello.fireTableRowsInserted(riga, riga);
@@ -83,14 +86,8 @@ public class FinestraPrincipale extends JFrame {
             mostraErroreSelezione("Per modificare è necessario prima selezionare una persona.");
             return;
         }
-        Persona nuoviDati = EditorPersona.apri(this, rubrica.getPersona(riga));
-        if (nuoviDati == null) {
+        if (EditorPersona.apri(this, rubrica.getPersona(riga), dati -> rubrica.modifica(riga, dati)) == null) {
             return;
-        }
-        try {
-            rubrica.modifica(riga, nuoviDati);
-        } catch (IOException e) {
-            mostraErroreSalvataggio(e);
         }
         modello.fireTableRowsUpdated(riga, riga);
     }
@@ -110,10 +107,21 @@ public class FinestraPrincipale extends JFrame {
         }
         try {
             rubrica.elimina(riga);
-        } catch (IOException e) {
-            mostraErroreSalvataggio(e);
+        } catch (SQLException e) {
+            Messaggi.erroreDatabase(this, e);
+            return;
         }
         modello.fireTableRowsDeleted(riga, riga);
+    }
+
+    /**
+     * Chiude la rubrica di questo utente e torna al login, senza riavviare il programma.
+     * Non serve chiedere conferma: ogni modifica è già salvata nel database.
+     */
+    private void logout() {
+        // prima si apre il login, poi si chiude questa finestra (dispose non termina il programma)
+        dopoLogout.run();
+        dispose();
     }
 
     /** Indice nella rubrica della riga selezionata, oppure -1 se nessuna riga è selezionata. */
@@ -130,11 +138,5 @@ public class FinestraPrincipale extends JFrame {
 
     private void mostraErroreSelezione(String messaggio) {
         JOptionPane.showMessageDialog(this, messaggio, "Nessuna persona selezionata", JOptionPane.ERROR_MESSAGE);
-    }
-
-    private void mostraErroreSalvataggio(IOException e) {
-        JOptionPane.showMessageDialog(this,
-                "Impossibile salvare i dati nel file:\n" + e.getMessage(),
-                "Errore di salvataggio", JOptionPane.ERROR_MESSAGE);
     }
 }

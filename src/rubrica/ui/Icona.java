@@ -21,7 +21,7 @@ import javax.swing.Icon;
  */
 final class Icona implements Icon {
 
-    enum Tipo { NUOVO, MODIFICA, ELIMINA, SALVA, ANNULLA }
+    enum Tipo { NUOVO, MODIFICA, ELIMINA, SALVA, ANNULLA, LOGOUT }
 
     private static final int LATO = 20;
 
@@ -72,6 +72,9 @@ final class Icona implements Icon {
                     break;
                 case ANNULLA:
                     disegnaAnnulla(g2);
+                    break;
+                case LOGOUT:
+                    disegnaLogout(g2);
                     break;
                 default:
                     break;
@@ -161,6 +164,29 @@ final class Icona implements Icon {
         g.setStroke(new BasicStroke(1f));
         g.draw(new Line2D.Double(6.5, 12.8, 13.5, 12.8));
         g.draw(new Line2D.Double(6.5, 14.8, 13.5, 14.8));
+    }
+
+    /** Porta aperta con una freccia che esce verso destra. */
+    private static void disegnaLogout(Graphics2D g) {
+        Path2D porta = new Path2D.Double();
+        porta.moveTo(11, 6);
+        porta.lineTo(11, 2.5);
+        porta.lineTo(3, 2.5);
+        porta.lineTo(3, 17.5);
+        porta.lineTo(11, 17.5);
+        porta.lineTo(11, 14);
+        g.setColor(GRIGIO);
+        g.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g.draw(porta);
+
+        g.setColor(BLU);
+        g.setStroke(TRATTO_SPESSO);
+        g.draw(new Line2D.Double(7, 10, 17.5, 10));
+        Path2D punta = new Path2D.Double();
+        punta.moveTo(14, 6.5);
+        punta.lineTo(17.5, 10);
+        punta.lineTo(14, 13.5);
+        g.draw(punta);
     }
 
     /** Cerchio grigio con la X. */

@@ -1,31 +1,37 @@
 package rubrica.logica;
 
-import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Vector;
 
 import rubrica.dominio.Persona;
-import rubrica.persistenza.GestoreFile;
+import rubrica.dominio.Utente;
+import rubrica.persistenza.GestorePersone;
 
 /**
- * Elenco delle persone della rubrica.
+ * I contatti di un utente, tenuti in un {@link Vector}.
  * <p>
- * Dopo ogni aggiunta, modifica o eliminazione salva l'intero elenco su file,
- * così il contenuto del file corrisponde sempre a quello mostrato in tabella.
- * Se il salvataggio fallisce la modifica resta comunque applicata in memoria
- * e viene lanciata una {@link IOException}.
+ * Ogni aggiunta, modifica o eliminazione viene prima salvata nel database e
+ * solo se il salvataggio riesce viene applicata all'elenco in memoria: se il
+ * database dà errore, l'elenco (e quindi la tabella) resta com'era.
  */
 public class Rubrica {
 
     private final Vector<Persona> persone = new Vector<>();
-    private final GestoreFile gestoreFile;
+    private final GestorePersone gestore;
+    private final Utente utente;
 
-    public Rubrica(GestoreFile gestoreFile) {
-        this.gestoreFile = gestoreFile;
+    public Rubrica(GestorePersone gestore, Utente utente) {
+        this.gestore = gestore;
+        this.utente = utente;
     }
 
-    /** Sostituisce l'elenco in memoria con le persone salvate nel file. */
-    public void carica() throws IOException {
-        Vector<Persona> caricate = gestoreFile.carica();
+    public Utente getUtente() {
+        return utente;
+    }
+
+    /** Sostituisce l'elenco in memoria con i contatti dell'utente salvati nel database. */
+    public void carica() throws SQLException {
+        Vector<Persona> caricate = gestore.carica(utente.getId());
         persone.clear();
         persone.addAll(caricate);
     }
@@ -38,23 +44,23 @@ public class Rubrica {
         return persone.get(indice);
     }
 
-    public void aggiungi(Persona persona) throws IOException {
+    public void aggiungi(Persona persona) throws SQLException {
+        gestore.inserisci(utente.getId(), persona);
         persone.add(persona);
-        salva();
     }
 
     /** Copia {@code nuoviDati} nella persona in posizione {@code indice}. */
-    public void modifica(int indice, Persona nuoviDati) throws IOException {
-        persone.get(indice).copiaDa(nuoviDati);
-        salva();
+    public void modifica(int indice, Persona nuoviDati) throws SQLException {
+        Persona attuale = persone.get(indice);
+        Persona aggiornata = new Persona(nuoviDati.getNome(), nuoviDati.getCognome(),
+                nuoviDati.getIndirizzo(), nuoviDati.getTelefono(), nuoviDati.getEta());
+        aggiornata.setId(attuale.getId());
+        gestore.aggiorna(utente.getId(), aggiornata);
+        attuale.copiaDa(nuoviDati);
     }
 
-    public void elimina(int indice) throws IOException {
+    public void elimina(int indice) throws SQLException {
+        gestore.elimina(utente.getId(), persone.get(indice));
         persone.remove(indice);
-        salva();
-    }
-
-    private void salva() throws IOException {
-        gestoreFile.salva(persone);
     }
 }

@@ -13,6 +13,15 @@ public class Persona {
     /** Valore di {@code eta} quando l'età non è indicata: l'età è facoltativa. */
     public static final int ETA_NON_INDICATA = 0;
 
+    /** Lunghezze massime dei campi, come le colonne della tabella persone. */
+    public static final int LUNGHEZZA_MASSIMA_NOME = 100;
+    public static final int LUNGHEZZA_MASSIMA_COGNOME = 100;
+    public static final int LUNGHEZZA_MASSIMA_INDIRIZZO = 255;
+    public static final int LUNGHEZZA_MASSIMA_TELEFONO = 50;
+
+    /** Valore di {@code id} per una persona non ancora salvata nel database. */
+    public static final int NUOVA = 0;
+
     /**
      * Caratteri ammessi nel telefono: cifre, spazi e i separatori usati nei vari
      * paesi ( ) - . / ; il + solo come primo carattere (prefisso internazionale).
@@ -21,6 +30,8 @@ public class Persona {
     private static final Pattern CARATTERI_TELEFONO = Pattern.compile("\\+?[0-9 ()./-]*");
     private static final int CIFRE_MINIME_TELEFONO = 3;
 
+    /** Chiave nel database, {@link #NUOVA} finché la persona non è salvata. */
+    private int id = NUOVA;
     private String nome;
     private String cognome;
     private String indirizzo;
@@ -55,13 +66,21 @@ public class Persona {
         return caratteriTelefonoAmmessi(telefono) && cifre >= CIFRE_MINIME_TELEFONO;
     }
 
-    /** Sostituisce i dati di questa persona con quelli di {@code altra}. */
+    /** Sostituisce i dati di questa persona con quelli di {@code altra}; l'id non cambia. */
     public void copiaDa(Persona altra) {
         this.nome = altra.nome;
         this.cognome = altra.cognome;
         this.indirizzo = altra.indirizzo;
         this.telefono = altra.telefono;
         this.eta = altra.eta;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getNome() {
