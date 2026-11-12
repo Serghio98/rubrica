@@ -50,9 +50,4 @@ public class Utente {
     public byte[] getHashPassword() {
         return hashPassword.clone();
     }
-
-    @Override
-    public String toString() {
-        return username;
-    }
 }

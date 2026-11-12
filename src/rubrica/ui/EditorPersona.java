@@ -77,8 +77,8 @@ public class EditorPersona extends JDialog {
 
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
-        toolbar.add(new BottoneToolbar("Salva", Icona.Tipo.SALVA, KeyEvent.VK_S, e -> salva()));
-        toolbar.add(new BottoneToolbar("Annulla", Icona.Tipo.ANNULLA, KeyEvent.VK_A, e -> dispose()));
+        toolbar.add(new BottoneToolbar("Salva", Icona.Tipo.SALVA, e -> salva()));
+        toolbar.add(new BottoneToolbar("Annulla", Icona.Tipo.ANNULLA, e -> dispose()));
 
         JPanel modulo = new JPanel(new GridBagLayout());
         modulo.setBorder(BorderFactory.createEmptyBorder(10, 12, 12, 12));

@@ -32,19 +32,8 @@ database non creato, server MySQL non raggiungibile.
 - Il titolo della finestra principale mostra l'utente che ha fatto il login.
 - **Logout**, a destra nella toolbar, chiude la rubrica e riapre il login, così si può
   entrare con un altro utente senza riavviare il programma.
-
-| Finestra | Comando | Tasti |
-|---|---|---|
-| Login | LOGIN | Invio |
-| Login | REGISTRA | Alt+R |
-| Registrazione | REGISTRA | Invio |
-| Registrazione | ANNULLA | Esc |
-| Principale | Nuovo | Alt+N |
-| Principale | Modifica | Alt+M, oppure doppio clic su una riga |
-| Principale | Elimina | Alt+E |
-| Principale | Logout | Alt+L |
-| Editor persona | Salva | Alt+S oppure Invio |
-| Editor persona | Annulla | Alt+A oppure Esc |
+- Il doppio clic su una riga apre la persona in modifica. Nelle finestre di login,
+  registrazione ed editor, Invio conferma ed Esc annulla.
 
 Regole dell'editor:
 

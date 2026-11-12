@@ -114,10 +114,6 @@ public class ConfigurazioneDatabase {
         return DriverManager.getConnection(url, username, password);
     }
 
-    public String getDatabase() {
-        return database;
-    }
-
     /** Ad esempio {@code root@localhost:3306/rubrica}. */
     public String descrizione() {
         return username + "@" + host + ":" + porta + "/" + database;

@@ -3,7 +3,6 @@ package rubrica.ui;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridBagLayout;
-import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
@@ -57,7 +56,6 @@ public class FinestraLogin extends JFrame {
         JButton login = new JButton("LOGIN");
         login.addActionListener(e -> accedi());
         JButton registra = new JButton("REGISTRA");
-        registra.setMnemonic(KeyEvent.VK_R);
         registra.addActionListener(e -> registra(null));
         // Invio = LOGIN
         getRootPane().setDefaultButton(login);

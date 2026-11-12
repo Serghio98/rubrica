@@ -1,7 +1,6 @@
 package rubrica.ui;
 
 import java.awt.BorderLayout;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.SQLException;
@@ -56,11 +55,11 @@ public class FinestraPrincipale extends JFrame {
 
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
-        toolbar.add(new BottoneToolbar("Nuovo", Icona.Tipo.NUOVO, KeyEvent.VK_N, e -> nuovo()));
-        toolbar.add(new BottoneToolbar("Modifica", Icona.Tipo.MODIFICA, KeyEvent.VK_M, e -> modifica()));
-        toolbar.add(new BottoneToolbar("Elimina", Icona.Tipo.ELIMINA, KeyEvent.VK_E, e -> elimina()));
+        toolbar.add(new BottoneToolbar("Nuovo", Icona.Tipo.NUOVO, e -> nuovo()));
+        toolbar.add(new BottoneToolbar("Modifica", Icona.Tipo.MODIFICA, e -> modifica()));
+        toolbar.add(new BottoneToolbar("Elimina", Icona.Tipo.ELIMINA, e -> elimina()));
         toolbar.add(Box.createHorizontalGlue());
-        toolbar.add(new BottoneToolbar("Logout", Icona.Tipo.LOGOUT, KeyEvent.VK_L, e -> logout()));
+        toolbar.add(new BottoneToolbar("Logout", Icona.Tipo.LOGOUT, e -> logout()));
 
         add(toolbar, BorderLayout.NORTH);
         add(new JScrollPane(tabella), BorderLayout.CENTER);

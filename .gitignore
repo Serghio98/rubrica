@@ -2,10 +2,4 @@
 out/
 bin/
 
-# pacchetto da consegnare; contiene anche le credenziali MySQL vere
 dist/
-
-# file della versione precedente, che salvava su file di testo
-Rubrica.jar
-informazioni.txt
-utenti.txt
